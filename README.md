@@ -1,228 +1,57 @@
 # 💸 Daily Expenses Sharing Platform
 
-> A robust RESTful backend application built with **Spring Boot and MySQL** to manage users, track shared expenses, support multiple expense-splitting strategies, and generate accurate balance sheets.
-
-<p align="center">
-  <img src="./img_1.png" alt="Daily Expenses Sharing Platform" width="850"/>
-</p>
+> A robust backend RESTful application built with **Spring Boot and MySQL** designed to manage daily expenses, divide balances through custom split algorithms, and generate accurate balance sheets.
 
 ---
 
 ## 📌 Overview
 
-Managing shared expenses across a group can quickly become complicated — especially when different people contribute different amounts or use different splitting rules.
+Managing group expenses can quickly become complicated. The **Daily Expenses Sharing Platform** simplifies group finance by providing an automated system to manage users, track expenses, calculate splits, and generate summary balance sheets.
 
-The **Daily Expenses Sharing Platform** simplifies this process by providing a RESTful backend that allows users to:
-
-* 👤 Create and manage user profiles
-* 💳 Record individual and shared expenses
-* ⚖️ Split expenses using multiple strategies
-* 🧮 Automatically calculate participant contributions
-* 📊 Generate consolidated balance sheets
-* 🔎 Retrieve expenses by user or expense ID
-* 🗄️ Persist application data using MySQL
-
-The application follows a clean **layered backend architecture**, separating API controllers, business logic, persistence, domain entities, and utility functions.
+The application supports multiple expense-splitting strategies, allowing expenses to be divided based on **equal amounts, exact amounts, or custom percentages**.
 
 ---
 
-# 🎯 Problem
+## ✨ Features
 
-Managing expenses manually becomes difficult when multiple people are involved.
+### 👤 User Management
 
-For every shared expense, users need to keep track of:
+Create, manage, and retrieve profile details for application users.
 
-* Who paid the expense
-* Who participated
-* How much each person owes
-* Whether the expense should be split equally
-* Exact amounts owed by each participant
-* Percentage-based contributions
-* Overall balances between participants
+### 💳 Expense Tracking
 
-Manual calculations can easily introduce inconsistencies and errors.
+Record individual or shared expenses and retrieve expense information whenever required.
 
-### 💡 Goal
+### ⚖️ Flexible Expense Splitting
 
-Build a backend system that allows users to **record expenses once and automatically calculate how the expense should be distributed among participants.**
+The application supports three different ways of splitting expenses:
 
----
+* **Equal** — Split the expense evenly among all participants.
+* **Exact** — Specify the exact amount each participant should contribute.
+* **Percentage** — Divide the expense based on custom percentage allocations.
 
-# 💡 Solution
+### 📊 Balance Sheet Generation
 
-The platform models users, expenses, participants, and split strategies and applies dedicated business logic to calculate each participant's contribution.
-
-```text
-                         ┌─────────────────────────┐
-                         │       REST Clients      │
-                         │ Postman / Frontend / API│
-                         └────────────┬────────────┘
-                                      │
-                                      ▼
-                         ┌─────────────────────────┐
-                         │      REST Controllers   │
-                         │ UserController          │
-                         │ ExpenseController       │
-                         └────────────┬────────────┘
-                                      │
-                                      ▼
-                         ┌─────────────────────────┐
-                         │        Services         │
-                         │ UserService             │
-                         │ ExpenseService          │
-                         └────────────┬────────────┘
-                                      │
-                     ┌────────────────┴────────────────┐
-                     │                                 │
-                     ▼                                 ▼
-          ┌─────────────────────┐           ┌─────────────────────┐
-          │   Split Engine      │           │ Spring Data JPA     │
-          │                     │           │    Repositories     │
-          │ • Equal             │           └──────────┬──────────┘
-          │ • Exact             │                      │
-          │ • Percentage        │                      ▼
-          └─────────────────────┘           ┌─────────────────────┐
-                                            │        MySQL        │
-                                            │     expensesharingdb│
-                                            └─────────────────────┘
-```
+Generate consolidated balance sheets showing the amounts spent and owed by users.
 
 ---
 
-# ✨ Key Features
+## 🛠️ Tech Stack
 
-## 👤 1. User Management
-
-The platform provides APIs for creating and retrieving user profiles.
-
-Each user contains information such as:
-
-* Name
-* Email
-* Mobile number
-
-### Available Operations
-
-| Method | Endpoint      | Description                   |
-| :----: | ------------- | ----------------------------- |
-| `POST` | `/users`      | Create a new user             |
-|  `GET` | `/users/{id}` | Retrieve a user by ID         |
-|  `GET` | `/users`      | Retrieve all registered users |
+| Technology             | Purpose                         |
+| ---------------------- | ------------------------------- |
+| **Java 17+**           | Backend development             |
+| **Spring Boot 3.3.2**  | RESTful application framework   |
+| **Spring Data JPA**    | Data persistence                |
+| **Hibernate**          | ORM                             |
+| **MySQL 8.0+**         | Relational database             |
+| **Jakarta Validation** | Input validation                |
+| **Project Lombok**     | Boilerplate reduction           |
+| **Maven**              | Build and dependency management |
 
 ---
 
-# 💳 2. Expense Tracking
-
-Users can create and retrieve shared expenses involving multiple participants.
-
-An expense can contain:
-
-* Expense amount
-* Paying user
-* Participants
-* Split type
-* Individual contribution
-
-### Available Operations
-
-| Method | Endpoint                  | Description                              |
-| :----: | ------------------------- | ---------------------------------------- |
-| `POST` | `/expenses`               | Create a new expense                     |
-|  `GET` | `/expenses/{id}`          | Retrieve an expense by ID                |
-|  `GET` | `/expenses`               | Retrieve all expenses                    |
-|  `GET` | `/expenses/user/{userId}` | Retrieve expenses associated with a user |
-|  `GET` | `/expenses/balance-sheet` | Generate the balance sheet               |
-
----
-
-# ⚖️ 3. Flexible Expense Splitting
-
-The core functionality of the platform is its **expense-splitting engine**.
-
-It supports three different splitting strategies.
-
----
-
-## 🟢 Equal Split
-
-The expense is divided equally between all participants.
-
-### Example
-
-```text
-Total Expense: ₹1,000
-Participants:  4
-
-User A → ₹250
-User B → ₹250
-User C → ₹250
-User D → ₹250
-
-Total → ₹1,000
-```
-
----
-
-## 🔵 Exact Split
-
-Each participant can be assigned a specific amount.
-
-### Example
-
-```text
-Total Expense: ₹1,000
-
-User A → ₹400
-User B → ₹300
-User C → ₹200
-User D → ₹100
-
-Total → ₹1,000
-```
-
----
-
-## 🟣 Percentage Split
-
-Each participant can be assigned a custom percentage of the total expense.
-
-### Example
-
-```text
-Total Expense: ₹1,000
-
-User A → 40% → ₹400
-User B → 30% → ₹300
-User C → 20% → ₹200
-User D → 10% → ₹100
-
-Total → ₹1,000
-```
-
-The splitting logic is isolated from the REST layer, allowing the calculation logic to evolve independently from the API implementation.
-
----
-
-# 📊 4. Balance Sheet Generation
-
-The platform provides a consolidated balance-sheet endpoint that summarizes the financial position of users.
-
-It helps answer:
-
-```text
-Who spent money?
-Who participated?
-How much did each person contribute?
-How much does each participant owe?
-```
-
-The balance sheet transforms individual expense records into a consolidated financial view.
-
----
-
-# 🏗️ Project Architecture
-
-The application follows a layered Spring Boot architecture.
+## 🏗️ Project Structure
 
 ```text
 src/main/java/com/expensesharing/
@@ -248,36 +77,77 @@ src/main/java/com/expensesharing/
     └── ExpenseSplitUtil.java
 ```
 
-### Layer Responsibilities
+### Architecture Responsibilities
 
 | Layer            | Responsibility                          |
 | ---------------- | --------------------------------------- |
-| **Controllers**  | Handle HTTP requests and REST endpoints |
+| **Controllers**  | Handle REST API requests                |
 | **Services**     | Implement core business logic           |
-| **Repositories** | Handle database persistence             |
-| **Entities**     | Represent application/domain models     |
-| **Utilities**    | Implement reusable expense calculations |
+| **Repositories** | Handle database access                  |
+| **Entities**     | Represent application data models       |
+| **Utilities**    | Handle reusable expense-splitting logic |
 
 ---
 
-# 🛠️ Technology Stack
+## ⚖️ Expense Splitting
 
-| Technology               | Purpose                         |
-| ------------------------ | ------------------------------- |
-| ☕ **Java 17+**           | Backend application development |
-| 🌱 **Spring Boot 3.3.2** | REST API framework              |
-| 🗃️ **Spring Data JPA**  | Database persistence            |
-| 🔄 **Hibernate**         | ORM and entity management       |
-| 🐬 **MySQL 8.0+**        | Relational database             |
-| ✅ **Jakarta Validation** | Request/data validation         |
-| 🧩 **Lombok**            | Boilerplate code reduction      |
-| 📦 **Maven**             | Build and dependency management |
+The application provides three different split algorithms.
+
+### Equal Split
+
+The total expense is divided equally among all participants.
+
+```text
+Total Expense: ₹1,000
+Participants: 4
+
+Each participant → ₹250
+```
+
+### Exact Split
+
+A specific amount can be assigned to every participant.
+
+```text
+Total Expense: ₹1,000
+
+User A → ₹400
+User B → ₹300
+User C → ₹200
+User D → ₹100
+```
+
+### Percentage Split
+
+The expense can be distributed according to custom percentages.
+
+```text
+Total Expense: ₹1,000
+
+User A → 40% → ₹400
+User B → 30% → ₹300
+User C → 20% → ₹200
+User D → 10% → ₹100
+```
 
 ---
 
-# 🗄️ Database Configuration
+## 📊 Balance Sheet
 
-The application uses **MySQL** for persistent data storage.
+The balance-sheet functionality provides a consolidated view of expenses and participant balances.
+
+It helps determine:
+
+* Total expenses
+* Individual contributions
+* Amounts owed by participants
+* Overall user balances
+
+---
+
+## 🗄️ Database Configuration
+
+The application uses **MySQL 8.0+** for persistent data storage.
 
 Create the database:
 
@@ -285,7 +155,7 @@ Create the database:
 CREATE DATABASE expensesharingdb;
 ```
 
-Configure your database credentials inside:
+Update the database credentials in:
 
 ```text
 src/main/resources/application.properties
@@ -294,28 +164,30 @@ src/main/resources/application.properties
 Example configuration:
 
 ```properties
-# MySQL Database Connection
+# MySQL Database Connection Configuration
+
 spring.datasource.url=jdbc:mysql://localhost:3306/expensesharingdb
 spring.datasource.username=YOUR_MYSQL_USERNAME
 spring.datasource.password=YOUR_MYSQL_PASSWORD
 spring.datasource.driverClassName=com.mysql.cj.jdbc.Driver
 
-# JPA & Hibernate
+# JPA & Hibernate Settings
+
 spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 ```
 
-> ⚠️ **Security:** Never commit real database credentials to GitHub. Use environment variables or a local configuration file for production deployments.
+> ⚠️ **Note:** Do not commit real database credentials to the repository.
 
 ---
 
-# 🚀 Getting Started
+# 🚀 Installation & Setup
 
 ## Prerequisites
 
-Make sure you have the following installed:
+Make sure the following are installed:
 
 * **JDK 17 or higher**
 * **Maven 3.6+**
@@ -324,7 +196,7 @@ Make sure you have the following installed:
 
 ---
 
-## 1️⃣ Clone the Repository
+## 1. Clone the Repository
 
 ```bash
 git clone https://github.com/kartheekkarumanchi99/Daily_Expenses_Sharing_Platform.git
@@ -334,9 +206,9 @@ cd Daily_Expenses_Sharing_Platform
 
 ---
 
-## 2️⃣ Create the Database
+## 2. Configure MySQL
 
-Start your local MySQL server and execute:
+Start your local MySQL server and create the database:
 
 ```sql
 CREATE DATABASE expensesharingdb;
@@ -344,7 +216,7 @@ CREATE DATABASE expensesharingdb;
 
 ---
 
-## 3️⃣ Configure Database Credentials
+## 3. Configure Application Properties
 
 Open:
 
@@ -352,7 +224,7 @@ Open:
 src/main/resources/application.properties
 ```
 
-Update:
+and configure your MySQL credentials:
 
 ```properties
 spring.datasource.username=YOUR_MYSQL_USERNAME
@@ -361,37 +233,39 @@ spring.datasource.password=YOUR_MYSQL_PASSWORD
 
 ---
 
-## 4️⃣ Build and Run
+## 4. Build & Run
 
-Using the Maven wrapper:
+Using Maven:
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Or run the main Spring Boot application class from:
-
-* IntelliJ IDEA
-* Eclipse
-* VS Code
+Alternatively, open the project in **IntelliJ IDEA**, **Eclipse**, or **VS Code** and run the main Spring Boot application class.
 
 ---
 
-## 5️⃣ Verify the Application
+## 5. Verify Application
 
-Once the application starts successfully:
+Once the application starts successfully, the server will be available at:
 
 ```text
 http://localhost:8080
 ```
 
-The REST APIs can then be accessed using tools such as **Postman**, cURL, or a frontend client.
+The APIs can be tested using Postman, cURL, or any compatible REST client.
 
 ---
 
 # 📡 API Reference
 
-## 👤 User APIs
+## 👤 User Endpoints
+
+| Method | Endpoint      | Description                |
+| ------ | ------------- | -------------------------- |
+| `POST` | `/users`      | Create a new user          |
+| `GET`  | `/users/{id}` | Get user details by ID     |
+| `GET`  | `/users`      | Fetch all registered users |
 
 ### Create User
 
@@ -411,240 +285,100 @@ Example request:
 
 ---
 
-### Get User
+## 💵 Expense Endpoints
 
-```http
-GET /users/{id}
-```
-
----
-
-### Get All Users
-
-```http
-GET /users
-```
-
----
-
-# 💵 Expense APIs
-
-### Create Expense
-
-```http
-POST /expenses
-```
-
----
-
-### Get Expense
-
-```http
-GET /expenses/{id}
-```
-
----
-
-### Get All Expenses
-
-```http
-GET /expenses
-```
-
----
-
-### Get User Expenses
-
-```http
-GET /expenses/user/{userId}
-```
-
----
-
-### Generate Balance Sheet
-
-```http
-GET /expenses/balance-sheet
-```
+| Method | Endpoint                  | Description                   |
+| ------ | ------------------------- | ----------------------------- |
+| `POST` | `/expenses`               | Record a new expense          |
+| `GET`  | `/expenses/{id}`          | Get a specific expense        |
+| `GET`  | `/expenses`               | Retrieve all expenses         |
+| `GET`  | `/expenses/user/{userId}` | Get expenses linked to a user |
+| `GET`  | `/expenses/balance-sheet` | Generate balance sheet        |
 
 ---
 
 # 📸 Proof of Work
 
-> The following snapshots demonstrate the implemented application workflows, REST API operations, expense-splitting logic, database interactions, and generated results.
+> The following snapshots demonstrate the implemented application and provide visual proof of the project's development and functionality.
 
-<div align="center">
+<p align="center">
+  <img src="./img_1.png" alt="Project Snapshot 1" width="800"/>
+</p>
 
-<table>
-<tr>
+<p align="center">
+  <img src="./img_2.png" alt="Project Snapshot 2" width="800"/>
+</p>
 
-<td align="center">
-<img src="./img_1.png" width="300"/>
-<br/>
-<b>01 — User Management</b>
-</td>
+<p align="center">
+  <img src="./img_3.png" alt="Project Snapshot 3" width="800"/>
+</p>
 
-<td align="center">
-<img src="./img_2.png" width="300"/>
-<br/>
-<b>02 — User Creation</b>
-</td>
+<p align="center">
+  <img src="./img_4.png" alt="Project Snapshot 4" width="800"/>
+</p>
 
-<td align="center">
-<img src="./img_3.png" width="300"/>
-<br/>
-<b>03 — Expense Creation</b>
-</td>
+<p align="center">
+  <img src="./img_5.png" alt="Project Snapshot 5" width="800"/>
+</p>
 
-</tr>
+<p align="center">
+  <img src="./img_6.png" alt="Project Snapshot 6" width="800"/>
+</p>
 
-<tr>
+<p align="center">
+  <img src="./img_7.png" alt="Project Snapshot 7" width="800"/>
+</p>
 
-<td align="center">
-<img src="./img_4.png" width="300"/>
-<br/>
-<b>04 — Equal Split</b>
-</td>
+<p align="center">
+  <img src="./img_8.png" alt="Project Snapshot 8" width="800"/>
+</p>
 
-<td align="center">
-<img src="./img_5.png" width="300"/>
-<br/>
-<b>05 — Exact Split</b>
-</td>
+<p align="center">
+  <img src="./img_9.png" alt="Project Snapshot 9" width="800"/>
+</p>
 
-<td align="center">
-<img src="./img_6.png" width="300"/>
-<br/>
-<b>06 — Percentage Split</b>
-</td>
+<p align="center">
+  <img src="./img_10.png" alt="Project Snapshot 10" width="800"/>
+</p>
 
-</tr>
+<p align="center">
+  <img src="./img_11.png" alt="Project Snapshot 11" width="800"/>
+</p>
 
-<tr>
-
-<td align="center">
-<img src="./img_7.png" width="300"/>
-<br/>
-<b>07 — Expense Retrieval</b>
-</td>
-
-<td align="center">
-<img src="./img_8.png" width="300"/>
-<br/>
-<b>08 — User Expenses</b>
-</td>
-
-<td align="center">
-<img src="./img_9.png" width="300"/>
-<br/>
-<b>09 — Balance Sheet</b>
-</td>
-
-</tr>
-
-<tr>
-
-<td align="center">
-<img src="./img_10.png" width="300"/>
-<br/>
-<b>10 — Database State</b>
-</td>
-
-<td align="center">
-<img src="./img_11.png" width="300"/>
-<br/>
-<b>11 — API Workflow</b>
-</td>
-
-<td align="center">
-<img src="./img_12.png" width="300"/>
-<br/>
-<b>12 — End-to-End Implementation</b>
-</td>
-
-</tr>
-</table>
-
-</div>
+<p align="center">
+  <img src="./img_12.png" alt="Project Snapshot 12" width="800"/>
+</p>
 
 ---
 
 # 🔍 Engineering Highlights
 
-### 🧱 Layered Architecture
-
-The application separates controllers, services, repositories, entities, and utility logic to maintain a clean separation of concerns.
-
-### ⚖️ Extensible Split Engine
-
-Expense calculation logic is isolated from the REST API layer, making it easier to introduce additional splitting strategies in the future.
-
-### 🗄️ Relational Persistence
-
-Application data is persisted using **Spring Data JPA + Hibernate + MySQL**.
-
-### 🔄 RESTful API Design
-
-The backend exposes resource-oriented endpoints for users and expenses using standard HTTP methods.
-
-### 🧮 Automated Calculations
-
-The system automatically calculates participant contributions based on the selected split strategy.
-
-### 📊 Consolidated Financial View
-
-The balance-sheet functionality aggregates expense information into a unified representation of user balances.
+* **Layered Architecture** separating controllers, services, repositories, entities, and utilities.
+* **Multiple Expense Split Algorithms** supporting equal, exact, and percentage-based splitting.
+* **RESTful API Design** for managing users and expenses.
+* **JPA/Hibernate Persistence** for reliable database interaction.
+* **MySQL Integration** for persistent relational data storage.
+* **Automated Balance Calculation** for generating consolidated expense summaries.
+* **Input Validation** using Jakarta Validation.
+* **Maintainable Business Logic** with expense calculation isolated from REST controllers.
 
 ---
 
-# 🧪 Example Workflow
+# 🗺️ Future Improvements
 
-A typical expense-sharing workflow looks like this:
+Potential extensions to the platform include:
 
-```text
-        1. Create Users
-               │
-               ▼
-        2. Create Expense
-               │
-               ▼
-        3. Add Participants
-               │
-               ▼
-        4. Select Split Type
-               │
-       ┌───────┼────────┐
-       ▼       ▼        ▼
-     Equal   Exact   Percentage
-       │       │        │
-       └───────┼────────┘
-               ▼
-        5. Calculate Shares
-               │
-               ▼
-        6. Persist Expense
-               │
-               ▼
-        7. Generate Balance Sheet
-```
-
----
-
-# 📈 Future Improvements
-
-The current architecture can be extended with:
-
-* 🔐 Authentication and authorization
-* 👥 Group-based expense management
-* 💰 Debt simplification algorithms
-* 📱 Web/mobile frontend
-* 📧 Expense notifications
-* 📊 Expense analytics and dashboards
-* 🧪 Automated unit and integration testing
-* 📖 Swagger / OpenAPI documentation
-* 🐳 Docker containerization
-* ☁️ Cloud deployment
-* ⚡ Caching and performance optimization
+* 🔐 Authentication & Authorization
+* 👥 Group Expense Management
+* 💰 Debt Simplification
+* 📱 Frontend Application
+* 📧 Expense Notifications
+* 📊 Expense Analytics
+* 🧪 Automated Unit & Integration Testing
+* 📖 Swagger / OpenAPI Documentation
+* 🐳 Docker Containerization
+* ☁️ Cloud Deployment
+* ⚡ Caching and Performance Optimization
 
 ---
 
@@ -687,32 +421,22 @@ Daily_Expenses_Sharing_Platform/
 
 ---
 
-# 📸 Project Demonstration
+# 📬 Contact
 
-The repository includes **12 implementation snapshots** covering the major functionality of the platform.
+For any inquiries, feedback, or collaboration:
 
-These snapshots provide visual evidence of:
+**Kartheek Karumanchi**
 
-**User Management → Expense Creation → Split Calculation → Expense Retrieval → Balance Sheet → Database Persistence → End-to-End Workflow**
+📧 Email: **[kartheekkarumanchi99@gmail.com](mailto:kartheekkarumanchi99@gmail.com)**
 
----
-
-# 👨‍💻 Author
-
-## Kartheek Karumanchi
-
-**Software Engineer | Backend & AI Systems**
-
-📧 **Email:** [kartheekkarumanchi99@gmail.com](mailto:kartheekkarumanchi99@gmail.com)
-
-🐙 **GitHub:** [@kartheekkarumanchi99](https://github.com/kartheekkarumanchi99)
+🐙 GitHub: **@kartheekkarumanchi99**
 
 ---
 
 <div align="center">
 
-### ⭐ If you found this project useful, consider giving the repository a star!
+### ⭐ If you find this project useful, consider giving the repository a star!
 
-**Built with ☕ Java + 🌱 Spring Boot + 🐬 MySQL**
+**Built with ☕ Java • 🌱 Spring Boot • 🐬 MySQL**
 
 </div>
