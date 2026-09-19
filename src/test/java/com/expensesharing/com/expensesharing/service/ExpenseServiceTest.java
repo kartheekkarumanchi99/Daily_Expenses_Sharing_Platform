@@ -2,6 +2,7 @@ package com.expensesharing.com.expensesharing.service;
 
 import com.expensesharing.com.expensesharing.entity.Expense;
 import com.expensesharing.com.expensesharing.entity.Participant;
+import com.expensesharing.com.expensesharing.entity.SplitType;
 import com.expensesharing.com.expensesharing.entity.User;
 import com.expensesharing.com.expensesharing.repositories.ExpenseRepository;
 import com.expensesharing.com.expensesharing.repositories.UserRepository;
@@ -62,13 +63,69 @@ public class ExpenseServiceTest {
         expense.setParticipants(Arrays.asList(participant));
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
+        Exception exception = assertThrows(ValidationException.class, () -> {
             expenseService.addExpense(expense);
         });
 
-        String expectedMessage = "Failed to add expense";
+        String expectedMessage = "User not found";
         String actualMessage = exception.getMessage();
         assertTrue(actualMessage.contains(expectedMessage));
+        verify(expenseRepository, times(0)).save(any(Expense.class));
+    }
+
+    @Test
+    public void testAddExpense_ExactAmountsMismatch_ShouldThrow() {
+        Expense expense = new Expense();
+        expense.setSplitType(SplitType.EXACT);
+        expense.setTotalAmount(1000.0);
+        Participant p1 = new Participant(1L, 400.0, null);
+        Participant p2 = new Participant(2L, 300.0, null);
+        expense.setParticipants(Arrays.asList(p1, p2));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(new User()));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(new User()));
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> {
+            expenseService.addExpense(expense);
+        });
+
+        assertTrue(exception.getMessage().contains("must equal the total amount"));
+        verify(expenseRepository, times(0)).save(any(Expense.class));
+    }
+
+    @Test
+    public void testAddExpense_ExactAmountsMatch_ShouldSucceed() throws Exception {
+        Expense expense = new Expense();
+        expense.setSplitType(SplitType.EXACT);
+        expense.setTotalAmount(1000.0);
+        Participant p1 = new Participant(1L, 600.0, null);
+        Participant p2 = new Participant(2L, 400.0, null);
+        expense.setParticipants(Arrays.asList(p1, p2));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(new User()));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(new User()));
+        when(expenseRepository.save(any(Expense.class))).thenReturn(expense);
+
+        Expense result = expenseService.addExpense(expense);
+
+        assertEquals(expense, result);
+        verify(expenseRepository, times(1)).save(expense);
+    }
+
+    @Test
+    public void testAddExpense_PercentagesNotHundred_ShouldThrow() {
+        Expense expense = new Expense();
+        expense.setSplitType(SplitType.PERCENTAGE);
+        expense.setTotalAmount(1000.0);
+        Participant p1 = new Participant(1L, null, 40.0);
+        Participant p2 = new Participant(2L, null, 40.0);
+        expense.setParticipants(Arrays.asList(p1, p2));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(new User()));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(new User()));
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> {
+            expenseService.addExpense(expense);
+        });
+
+        assertTrue(exception.getMessage().contains("must equal 100"));
         verify(expenseRepository, times(0)).save(any(Expense.class));
     }
 

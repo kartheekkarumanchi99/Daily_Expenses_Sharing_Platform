@@ -2,6 +2,7 @@ package com.expensesharing.com.expensesharing.service;
 
 import com.expensesharing.com.expensesharing.entity.Expense;
 import com.expensesharing.com.expensesharing.entity.Participant;
+import com.expensesharing.com.expensesharing.entity.SplitType;
 import com.expensesharing.com.expensesharing.entity.User;
 import com.expensesharing.com.expensesharing.repositories.ExpenseRepository;
 import com.expensesharing.com.expensesharing.repositories.UserRepository;
@@ -28,8 +29,9 @@ public class ExpenseService {
     private ExpenseSplitUtil expenseSplitUtil;
 
     public Expense addExpense(Expense expense) {
+        validateParticipants(expense.getParticipants());
+        validateSplit(expense);
         try {
-            validateParticipants(expense.getParticipants());
             expenseSplitUtil.splitExpense(expense);
             return expenseRepository.save(expense);
         } catch (Exception e) {
@@ -50,9 +52,49 @@ public class ExpenseService {
     }
 
     private void validateParticipants(List<Participant> participants) {
+        if (participants == null || participants.isEmpty()) {
+            throw new ValidationException("At least one participant is required");
+        }
         for (Participant participant : participants) {
             userRepository.findById(participant.getUserId())
                     .orElseThrow(() -> new ValidationException("User not found"));
+        }
+    }
+
+    // Ensures the chosen split strategy is internally consistent before persisting:
+    //  - EXACT      : the participants' amounts must add up to the expense total
+    //  - PERCENTAGE : the participants' percentages must add up to 100
+    private void validateSplit(Expense expense) {
+        SplitType splitType = expense.getSplitType();
+        if (splitType == null) {
+            return;
+        }
+        List<Participant> participants = expense.getParticipants();
+        double tolerance = 0.01;
+
+        switch (splitType) {
+            case EXACT:
+                double amountSum = participants.stream()
+                        .mapToDouble(p -> p.getAmount() == null ? 0.0 : p.getAmount())
+                        .sum();
+                if (expense.getTotalAmount() == null
+                        || Math.abs(amountSum - expense.getTotalAmount()) > tolerance) {
+                    throw new ValidationException(
+                            "Sum of exact amounts (" + amountSum + ") must equal the total amount ("
+                                    + expense.getTotalAmount() + ")");
+                }
+                break;
+            case PERCENTAGE:
+                double percentageSum = participants.stream()
+                        .mapToDouble(p -> p.getPercentage() == null ? 0.0 : p.getPercentage())
+                        .sum();
+                if (Math.abs(percentageSum - 100.0) > tolerance) {
+                    throw new ValidationException(
+                            "Sum of percentages (" + percentageSum + ") must equal 100");
+                }
+                break;
+            default:
+                break;
         }
     }
 
