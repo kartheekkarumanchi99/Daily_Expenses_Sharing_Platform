@@ -245,6 +245,35 @@ Using Maven:
 
 Alternatively, open the project in **IntelliJ IDEA**, **Eclipse**, or **VS Code** and run the main Spring Boot application class.
 
+### 🐳 Run with Docker (app + MySQL)
+
+The project ships with a multi-stage `Dockerfile` and a `docker-compose.yml`
+that starts both the application and a MySQL database — no local Java or MySQL
+required:
+
+```bash
+docker compose up --build
+```
+
+The API will be available at `http://localhost:8080` once both containers are
+healthy. Override secrets via environment variables (or a `.env` file):
+
+```bash
+MYSQL_ROOT_PASSWORD=... SECURITY_JWT_SECRET=... docker compose up --build
+```
+
+To build and run only the application image against an existing database:
+
+```bash
+docker build -t expense-sharing .
+docker run -p 8080:8080 \
+  -e SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/expensesharingdb \
+  -e SPRING_DATASOURCE_USERNAME=root \
+  -e SPRING_DATASOURCE_PASSWORD=yourpassword \
+  -e SECURITY_JWT_SECRET=your-32char-min-secret \
+  expense-sharing
+```
+
 ---
 
 ## 5. Verify Application
