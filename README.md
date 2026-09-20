@@ -349,6 +349,42 @@ Example request:
 | `GET`  | `/expenses`               | Retrieve all expenses         |
 | `GET`  | `/expenses/user/{userId}` | Get expenses linked to a user |
 | `GET`  | `/expenses/balance-sheet` | Generate balance sheet        |
+| `GET`  | `/expenses/settlements`   | Minimal "who pays whom" debts |
+
+### Record an Expense
+
+```http
+POST /expenses
+```
+
+```json
+{
+  "description": "Dinner",
+  "totalAmount": 300.0,
+  "splitType": "EQUAL",
+  "paidByUserId": 1,
+  "participants": [ { "userId": 1 }, { "userId": 2 }, { "userId": 3 } ]
+}
+```
+
+> `paidByUserId` records who actually paid. It is optional for creating an
+> expense but required for that expense to be included in debt settlement.
+
+### 💰 Debt Simplification (`/expenses/settlements`)
+
+Instead of listing every raw share, this endpoint computes each user's **net
+balance** across all expenses (the payer is credited the full amount; each
+participant is debited their share) and reduces them to the **minimum number of
+transfers** using a greedy min-cash-flow algorithm.
+
+Example response:
+
+```json
+[
+  { "fromUserId": 3, "fromUserName": "Carol", "toUserId": 1, "toUserName": "Alice", "amount": 140.0 },
+  { "fromUserId": 2, "fromUserName": "Bob",   "toUserId": 1, "toUserName": "Alice", "amount": 20.0 }
+]
+```
 
 ---
 

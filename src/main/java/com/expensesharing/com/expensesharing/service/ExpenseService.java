@@ -1,11 +1,13 @@
 package com.expensesharing.com.expensesharing.service;
 
+import com.expensesharing.com.expensesharing.dto.Settlement;
 import com.expensesharing.com.expensesharing.entity.Expense;
 import com.expensesharing.com.expensesharing.entity.Participant;
 import com.expensesharing.com.expensesharing.entity.SplitType;
 import com.expensesharing.com.expensesharing.entity.User;
 import com.expensesharing.com.expensesharing.repositories.ExpenseRepository;
 import com.expensesharing.com.expensesharing.repositories.UserRepository;
+import com.expensesharing.com.expensesharing.util.DebtSimplificationUtil;
 import com.expensesharing.com.expensesharing.util.ExpenseSplitUtil;
 import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ public class ExpenseService {
 
     @Autowired
     private ExpenseSplitUtil expenseSplitUtil;
+
+    @Autowired
+    private DebtSimplificationUtil debtSimplificationUtil;
 
     public Expense addExpense(Expense expense) {
         validateParticipants(expense.getParticipants());
@@ -121,6 +126,50 @@ public class ExpenseService {
         }
 
         return balanceSheetData;
+    }
+
+    // Computes each user's net position across every expense that records a payer:
+    //   the payer is credited the full amount, and every participant is debited their share.
+    // Positive net = the user is owed money; negative net = the user owes money.
+    public Map<Long, Double> computeNetBalances() {
+        Map<Long, Double> netByUser = new HashMap<>();
+
+        for (Expense expense : getAllExpenses()) {
+            Long payerId = expense.getPaidByUserId();
+            if (payerId == null || expense.getParticipants() == null) {
+                continue;
+            }
+            netByUser.merge(payerId, expense.getTotalAmount(), Double::sum);
+            for (Participant participant : expense.getParticipants()) {
+                double share = participant.getAmount() == null ? 0.0 : participant.getAmount();
+                netByUser.merge(participant.getUserId(), -share, Double::sum);
+            }
+        }
+
+        return netByUser;
+    }
+
+    // Simplifies all outstanding debts into the minimal set of "who pays whom" transfers.
+    public List<Settlement> getSettlements() {
+        Map<Long, Double> netByUser = computeNetBalances();
+        List<DebtSimplificationUtil.Transfer> transfers = debtSimplificationUtil.simplify(netByUser);
+
+        List<Settlement> settlements = new ArrayList<>();
+        for (DebtSimplificationUtil.Transfer transfer : transfers) {
+            settlements.add(new Settlement(
+                    transfer.getFromUserId(),
+                    lookupUserName(transfer.getFromUserId()),
+                    transfer.getToUserId(),
+                    lookupUserName(transfer.getToUserId()),
+                    transfer.getAmount()));
+        }
+        return settlements;
+    }
+
+    private String lookupUserName(Long userId) {
+        return userRepository.findById(userId)
+                .map(User::getName)
+                .orElse("Unknown");
     }
 
 

@@ -37,6 +37,9 @@ public class ExpenseServiceTest {
     @Mock
     private ExpenseSplitUtil expenseSplitUtil;
 
+    @Mock
+    private com.expensesharing.com.expensesharing.util.DebtSimplificationUtil debtSimplificationUtil;
+
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -205,5 +208,36 @@ public class ExpenseServiceTest {
         String expectedMessage = "User not found";
         String actualMessage = exception.getMessage();
         assertTrue(actualMessage.contains(expectedMessage));
+    }
+
+    @Test
+    public void testComputeNetBalances_CreditsPayerAndDebitsParticipants() {
+        Expense expense = new Expense();
+        expense.setTotalAmount(100.0);
+        expense.setPaidByUserId(1L);
+        Participant p1 = new Participant(1L, 50.0, null);
+        Participant p2 = new Participant(2L, 50.0, null);
+        expense.setParticipants(Arrays.asList(p1, p2));
+        when(expenseRepository.findAll()).thenReturn(Arrays.asList(expense));
+
+        Map<Long, Double> net = expenseService.computeNetBalances();
+
+        // Payer (user 1) paid 100 but owes 50 -> net +50; user 2 owes 50 -> net -50
+        assertEquals(50.0, net.get(1L), 0.001);
+        assertEquals(-50.0, net.get(2L), 0.001);
+    }
+
+    @Test
+    public void testComputeNetBalances_IgnoresExpensesWithoutPayer() {
+        Expense expense = new Expense();
+        expense.setTotalAmount(100.0);
+        expense.setPaidByUserId(null);
+        Participant p1 = new Participant(1L, 100.0, null);
+        expense.setParticipants(Arrays.asList(p1));
+        when(expenseRepository.findAll()).thenReturn(Arrays.asList(expense));
+
+        Map<Long, Double> net = expenseService.computeNetBalances();
+
+        assertTrue(net.isEmpty());
     }
 }

@@ -1,6 +1,7 @@
 package com.expensesharing.com.expensesharing.controller;
 
 
+import com.expensesharing.com.expensesharing.dto.Settlement;
 import com.expensesharing.com.expensesharing.entity.Expense;
 import com.expensesharing.com.expensesharing.service.ExpenseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,6 +54,12 @@ public class ExpenseController {
     public ResponseEntity<List<Map<String, Object>>> downloadBalanceSheet() {
         List<Map<String, Object>> balanceSheetData = expenseService.generateBalanceSheetData();
         return new ResponseEntity<>(balanceSheetData, HttpStatus.OK);
+    }
+
+    @GetMapping("/settlements")
+    @Operation(summary = "Simplify debts into the minimal set of who-pays-whom transfers")
+    public ResponseEntity<List<Settlement>> getSettlements() {
+        return new ResponseEntity<>(expenseService.getSettlements(), HttpStatus.OK);
     }
 
 

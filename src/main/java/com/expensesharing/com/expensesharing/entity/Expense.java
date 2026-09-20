@@ -25,6 +25,10 @@ public class Expense {
     @Enumerated(EnumType.STRING)
     private SplitType splitType;
 
+    // Optional: the user who actually paid for this expense.
+    // Required only for the debt-settlement calculation (/expenses/settlements).
+    private Long paidByUserId;
+
     @ElementCollection
     @CollectionTable(name = "expense_participants", joinColumns = @JoinColumn(name = "expense_id"))
     private List<Participant> participants;
@@ -59,6 +63,14 @@ public class Expense {
 
     public void setSplitType(SplitType splitType) {
         this.splitType = splitType;
+    }
+
+    public Long getPaidByUserId() {
+        return paidByUserId;
+    }
+
+    public void setPaidByUserId(Long paidByUserId) {
+        this.paidByUserId = paidByUserId;
     }
 }
 
