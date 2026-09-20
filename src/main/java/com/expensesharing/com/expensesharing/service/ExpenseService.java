@@ -12,6 +12,8 @@ import com.expensesharing.com.expensesharing.util.DebtSimplificationUtil;
 import com.expensesharing.com.expensesharing.util.ExpenseSplitUtil;
 import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,12 +36,20 @@ public class ExpenseService {
     @Autowired
     private DebtSimplificationUtil debtSimplificationUtil;
 
+    @Autowired
+    private NotificationService notificationService;
+
+    @CacheEvict(value = {"analytics", "settlements"}, allEntries = true)
     public Expense addExpense(Expense expense) {
         validateParticipants(expense.getParticipants());
         validateSplit(expense);
         try {
             expenseSplitUtil.splitExpense(expense);
-            return expenseRepository.save(expense);
+            Expense saved = expenseRepository.save(expense);
+            notificationService.record("EXPENSE_ADDED",
+                    "Expense '" + saved.getDescription() + "' of "
+                            + saved.getTotalAmount() + " was added");
+            return saved;
         } catch (Exception e) {
             throw new RuntimeException("Failed to add expense", e);
         }
@@ -155,6 +165,7 @@ public class ExpenseService {
     }
 
     // Simplifies all outstanding debts into the minimal set of "who pays whom" transfers.
+    @Cacheable("settlements")
     public List<Settlement> getSettlements() {
         return simplify(computeNetBalances());
     }
@@ -187,6 +198,7 @@ public class ExpenseService {
 
     // Aggregates spending insights across every recorded expense:
     //   totals, average, per-split-type counts, and per-user owed/paid sums.
+    @Cacheable("analytics")
     public ExpenseAnalytics computeAnalytics() {
         List<Expense> expenses = getAllExpenses();
 

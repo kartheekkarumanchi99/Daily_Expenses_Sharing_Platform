@@ -31,17 +31,20 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
+    private final com.expensesharing.com.expensesharing.service.NotificationService notificationService;
 
     public AuthController(AuthAccountRepository authAccountRepository,
                           PasswordEncoder passwordEncoder,
                           AuthenticationManager authenticationManager,
                           UserDetailsService userDetailsService,
-                          JwtService jwtService) {
+                          JwtService jwtService,
+                          com.expensesharing.com.expensesharing.service.NotificationService notificationService) {
         this.authAccountRepository = authAccountRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtService = jwtService;
+        this.notificationService = notificationService;
     }
 
     @PostMapping("/register")
@@ -56,6 +59,8 @@ public class AuthController {
                 passwordEncoder.encode(request.getPassword()),
                 Role.USER);
         authAccountRepository.save(account);
+        notificationService.record("USER_REGISTERED",
+                "New account '" + account.getUsername() + "' registered");
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(account.getUsername());
         String token = jwtService.generateToken(userDetails);

@@ -43,6 +43,7 @@ Generate consolidated balance sheets showing the amounts spent and owed by users
 | **Java 17+**           | Backend development             |
 | **Spring Boot 3.3.2**  | RESTful application framework   |
 | **Spring Security + JWT** | Stateless authentication     |
+| **Spring Cache**       | Caching for read-heavy endpoints|
 | **springdoc-openapi**  | Swagger / OpenAPI documentation |
 | **Spring Data JPA**    | Data persistence                |
 | **Hibernate**          | ORM                             |
@@ -470,6 +471,33 @@ POST /groups/1/members
 ```json
 { "userId": 4 }
 ```
+
+---
+
+## 🔔 Notification Endpoints
+
+An activity feed is recorded automatically when key events happen (a user
+registers, a group is created, or an expense is added).
+
+| Method | Endpoint         | Description                          |
+| ------ | ---------------- | ------------------------------------ |
+| `GET`  | `/notifications` | Get the 50 most recent notifications |
+
+Example response:
+
+```json
+[
+  { "id": 3, "type": "EXPENSE_ADDED",   "message": "Expense 'Rent' of 200.0 was added", "createdAt": "2026-09-20T09:43:17" },
+  { "id": 2, "type": "GROUP_CREATED",   "message": "Group 'Flat' was created with 2 member(s)", "createdAt": "2026-09-20T09:43:16" },
+  { "id": 1, "type": "USER_REGISTERED", "message": "New account 'gina' registered", "createdAt": "2026-09-20T09:43:15" }
+]
+```
+
+## ⚡ Caching
+
+The read-heavy `GET /expenses/analytics` and `GET /expenses/settlements`
+responses are cached (Spring Cache). The caches are automatically **evicted when
+a new expense is added**, so results are fast without ever serving stale data.
 
 ---
 

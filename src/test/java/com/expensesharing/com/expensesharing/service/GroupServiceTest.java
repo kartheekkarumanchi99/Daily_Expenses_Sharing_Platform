@@ -37,6 +37,9 @@ public class GroupServiceTest {
     @Mock
     private ExpenseService expenseService;
 
+    @Mock
+    private NotificationService notificationService;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);

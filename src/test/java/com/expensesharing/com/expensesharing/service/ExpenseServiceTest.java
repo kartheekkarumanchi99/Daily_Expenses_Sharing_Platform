@@ -40,6 +40,9 @@ public class ExpenseServiceTest {
     @Mock
     private com.expensesharing.com.expensesharing.util.DebtSimplificationUtil debtSimplificationUtil;
 
+    @Mock
+    private NotificationService notificationService;
+
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);

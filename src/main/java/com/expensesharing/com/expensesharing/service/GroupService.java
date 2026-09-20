@@ -27,9 +27,17 @@ public class GroupService {
     @Autowired
     private ExpenseService expenseService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public Group createGroup(Group group) {
         validateMembers(group.getMemberUserIds());
-        return groupRepository.save(group);
+        Group saved = groupRepository.save(group);
+        notificationService.record("GROUP_CREATED",
+                "Group '" + saved.getName() + "' was created with "
+                        + (saved.getMemberUserIds() == null ? 0 : saved.getMemberUserIds().size())
+                        + " member(s)");
+        return saved;
     }
 
     public Group getGroupById(Long id) {
