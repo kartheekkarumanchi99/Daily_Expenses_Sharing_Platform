@@ -133,9 +133,13 @@ public class ExpenseService {
     //   the payer is credited the full amount, and every participant is debited their share.
     // Positive net = the user is owed money; negative net = the user owes money.
     public Map<Long, Double> computeNetBalances() {
+        return computeNetBalances(getAllExpenses());
+    }
+
+    public Map<Long, Double> computeNetBalances(List<Expense> expenses) {
         Map<Long, Double> netByUser = new HashMap<>();
 
-        for (Expense expense : getAllExpenses()) {
+        for (Expense expense : expenses) {
             Long payerId = expense.getPaidByUserId();
             if (payerId == null || expense.getParticipants() == null) {
                 continue;
@@ -152,7 +156,15 @@ public class ExpenseService {
 
     // Simplifies all outstanding debts into the minimal set of "who pays whom" transfers.
     public List<Settlement> getSettlements() {
-        Map<Long, Double> netByUser = computeNetBalances();
+        return simplify(computeNetBalances());
+    }
+
+    // Simplifies debts for a specific set of expenses (e.g. a single group).
+    public List<Settlement> getSettlementsFor(List<Expense> expenses) {
+        return simplify(computeNetBalances(expenses));
+    }
+
+    private List<Settlement> simplify(Map<Long, Double> netByUser) {
         List<DebtSimplificationUtil.Transfer> transfers = debtSimplificationUtil.simplify(netByUser);
 
         List<Settlement> settlements = new ArrayList<>();

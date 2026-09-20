@@ -437,6 +437,42 @@ Example response:
 
 ---
 
+## 👥 Group Endpoints
+
+Groups let you scope members and settlements to a shared context (a trip, a flat, etc.).
+Add `"groupId"` to an expense to associate it with a group.
+
+| Method | Endpoint                    | Description                          |
+| ------ | --------------------------- | ------------------------------------ |
+| `POST` | `/groups`                   | Create a group with members          |
+| `GET`  | `/groups/{id}`              | Get a group by ID                    |
+| `GET`  | `/groups`                   | List all groups                      |
+| `POST` | `/groups/{id}/members`      | Add a member to a group              |
+| `GET`  | `/groups/{id}/expenses`     | List a group's expenses              |
+| `GET`  | `/groups/{id}/settlements`  | Minimal settlements within the group |
+
+### Create a Group
+
+```http
+POST /groups
+```
+
+```json
+{ "name": "Goa Trip", "memberUserIds": [1, 2, 3] }
+```
+
+### Add a Member
+
+```http
+POST /groups/1/members
+```
+
+```json
+{ "userId": 4 }
+```
+
+---
+
 # 📸 Proof of Work
 
 > The following snapshots demonstrate the implemented application and provide visual proof of the project's development and functionality.

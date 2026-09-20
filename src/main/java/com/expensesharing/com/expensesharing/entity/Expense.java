@@ -29,6 +29,9 @@ public class Expense {
     // Required only for the debt-settlement calculation (/expenses/settlements).
     private Long paidByUserId;
 
+    // Optional: the group this expense belongs to (see /groups).
+    private Long groupId;
+
     @ElementCollection
     @CollectionTable(name = "expense_participants", joinColumns = @JoinColumn(name = "expense_id"))
     private List<Participant> participants;
@@ -71,6 +74,14 @@ public class Expense {
 
     public void setPaidByUserId(Long paidByUserId) {
         this.paidByUserId = paidByUserId;
+    }
+
+    public Long getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(Long groupId) {
+        this.groupId = groupId;
     }
 }
 
