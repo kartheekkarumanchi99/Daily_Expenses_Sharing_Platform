@@ -379,6 +379,7 @@ Example request:
 | `GET`  | `/expenses/user/{userId}` | Get expenses linked to a user |
 | `GET`  | `/expenses/balance-sheet` | Generate balance sheet        |
 | `GET`  | `/expenses/settlements`   | Minimal "who pays whom" debts |
+| `GET`  | `/expenses/analytics`     | Aggregate spending insights   |
 
 ### Record an Expense
 
@@ -413,6 +414,25 @@ Example response:
   { "fromUserId": 3, "fromUserName": "Carol", "toUserId": 1, "toUserName": "Alice", "amount": 140.0 },
   { "fromUserId": 2, "fromUserName": "Bob",   "toUserId": 1, "toUserName": "Alice", "amount": 20.0 }
 ]
+```
+
+### 📈 Expense Analytics (`/expenses/analytics`)
+
+Returns aggregate spending insights across all recorded expenses: total count and
+amount, average expense size, a per-split-type breakdown, and per-user "owed" and
+"paid" totals.
+
+Example response:
+
+```json
+{
+  "totalExpenses": 2,
+  "totalAmount": 300.0,
+  "averageExpenseAmount": 150.0,
+  "countBySplitType": { "EQUAL": 2 },
+  "totalOwedByUser": { "Alice": 150.0, "Bob": 150.0 },
+  "totalPaidByUser": { "Alice": 200.0, "Bob": 100.0 }
+}
 ```
 
 ---

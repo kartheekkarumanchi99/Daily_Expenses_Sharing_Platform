@@ -1,6 +1,7 @@
 package com.expensesharing.com.expensesharing.controller;
 
 
+import com.expensesharing.com.expensesharing.dto.ExpenseAnalytics;
 import com.expensesharing.com.expensesharing.dto.Settlement;
 import com.expensesharing.com.expensesharing.entity.Expense;
 import com.expensesharing.com.expensesharing.service.ExpenseService;
@@ -60,6 +61,12 @@ public class ExpenseController {
     @Operation(summary = "Simplify debts into the minimal set of who-pays-whom transfers")
     public ResponseEntity<List<Settlement>> getSettlements() {
         return new ResponseEntity<>(expenseService.getSettlements(), HttpStatus.OK);
+    }
+
+    @GetMapping("/analytics")
+    @Operation(summary = "Aggregate spending insights across all expenses")
+    public ResponseEntity<ExpenseAnalytics> getAnalytics() {
+        return new ResponseEntity<>(expenseService.computeAnalytics(), HttpStatus.OK);
     }
 
 

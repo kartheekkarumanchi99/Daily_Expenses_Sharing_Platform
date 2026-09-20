@@ -240,4 +240,58 @@ public class ExpenseServiceTest {
 
         assertTrue(net.isEmpty());
     }
+
+    @Test
+    public void testComputeAnalytics_AggregatesTotalsAndBreakdowns() {
+        Expense e1 = new Expense();
+        e1.setDescription("Dinner");
+        e1.setTotalAmount(300.0);
+        e1.setSplitType(SplitType.EQUAL);
+        e1.setPaidByUserId(1L);
+        e1.setParticipants(Arrays.asList(
+                new Participant(1L, 150.0, null),
+                new Participant(2L, 150.0, null)));
+
+        Expense e2 = new Expense();
+        e2.setDescription("Cab");
+        e2.setTotalAmount(100.0);
+        e2.setSplitType(SplitType.EQUAL);
+        e2.setPaidByUserId(2L);
+        e2.setParticipants(Arrays.asList(
+                new Participant(1L, 50.0, null),
+                new Participant(2L, 50.0, null)));
+
+        when(expenseRepository.findAll()).thenReturn(Arrays.asList(e1, e2));
+        User alice = new User();
+        alice.setName("Alice");
+        User bob = new User();
+        bob.setName("Bob");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(bob));
+
+        com.expensesharing.com.expensesharing.dto.ExpenseAnalytics analytics =
+                expenseService.computeAnalytics();
+
+        assertEquals(2, analytics.getTotalExpenses());
+        assertEquals(400.0, analytics.getTotalAmount(), 0.001);
+        assertEquals(200.0, analytics.getAverageExpenseAmount(), 0.001);
+        assertEquals(2L, analytics.getCountBySplitType().get("EQUAL"));
+        assertEquals(200.0, analytics.getTotalOwedByUser().get("Alice"), 0.001);
+        assertEquals(200.0, analytics.getTotalOwedByUser().get("Bob"), 0.001);
+        assertEquals(300.0, analytics.getTotalPaidByUser().get("Alice"), 0.001);
+        assertEquals(100.0, analytics.getTotalPaidByUser().get("Bob"), 0.001);
+    }
+
+    @Test
+    public void testComputeAnalytics_EmptyWhenNoExpenses() {
+        when(expenseRepository.findAll()).thenReturn(Arrays.asList());
+
+        com.expensesharing.com.expensesharing.dto.ExpenseAnalytics analytics =
+                expenseService.computeAnalytics();
+
+        assertEquals(0, analytics.getTotalExpenses());
+        assertEquals(0.0, analytics.getTotalAmount(), 0.001);
+        assertEquals(0.0, analytics.getAverageExpenseAmount(), 0.001);
+        assertTrue(analytics.getCountBySplitType().isEmpty());
+    }
 }

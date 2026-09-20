@@ -1,5 +1,6 @@
 package com.expensesharing.com.expensesharing.service;
 
+import com.expensesharing.com.expensesharing.dto.ExpenseAnalytics;
 import com.expensesharing.com.expensesharing.dto.Settlement;
 import com.expensesharing.com.expensesharing.entity.Expense;
 import com.expensesharing.com.expensesharing.entity.Participant;
@@ -170,6 +171,64 @@ public class ExpenseService {
         return userRepository.findById(userId)
                 .map(User::getName)
                 .orElse("Unknown");
+    }
+
+    // Aggregates spending insights across every recorded expense:
+    //   totals, average, per-split-type counts, and per-user owed/paid sums.
+    public ExpenseAnalytics computeAnalytics() {
+        List<Expense> expenses = getAllExpenses();
+
+        long totalExpenses = expenses.size();
+        double totalAmount = 0.0;
+        Map<String, Long> countBySplitType = new HashMap<>();
+        Map<String, Double> totalOwedByUser = new HashMap<>();
+        Map<String, Double> totalPaidByUser = new HashMap<>();
+
+        for (Expense expense : expenses) {
+            if (expense.getTotalAmount() != null) {
+                totalAmount += expense.getTotalAmount();
+            }
+
+            String splitType = expense.getSplitType() == null
+                    ? "UNSPECIFIED" : expense.getSplitType().name();
+            countBySplitType.merge(splitType, 1L, Long::sum);
+
+            if (expense.getPaidByUserId() != null && expense.getTotalAmount() != null) {
+                totalPaidByUser.merge(
+                        lookupUserName(expense.getPaidByUserId()),
+                        expense.getTotalAmount(), Double::sum);
+            }
+
+            if (expense.getParticipants() != null) {
+                for (Participant participant : expense.getParticipants()) {
+                    double share = participant.getAmount() == null ? 0.0 : participant.getAmount();
+                    totalOwedByUser.merge(
+                            lookupUserName(participant.getUserId()), share, Double::sum);
+                }
+            }
+        }
+
+        ExpenseAnalytics analytics = new ExpenseAnalytics();
+        analytics.setTotalExpenses(totalExpenses);
+        analytics.setTotalAmount(round(totalAmount));
+        analytics.setAverageExpenseAmount(
+                totalExpenses == 0 ? 0.0 : round(totalAmount / totalExpenses));
+        analytics.setCountBySplitType(countBySplitType);
+        analytics.setTotalOwedByUser(roundValues(totalOwedByUser));
+        analytics.setTotalPaidByUser(roundValues(totalPaidByUser));
+        return analytics;
+    }
+
+    private double round(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+
+    private Map<String, Double> roundValues(Map<String, Double> map) {
+        Map<String, Double> rounded = new HashMap<>();
+        for (Map.Entry<String, Double> entry : map.entrySet()) {
+            rounded.put(entry.getKey(), round(entry.getValue()));
+        }
+        return rounded;
     }
 
 
