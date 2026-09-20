@@ -42,6 +42,8 @@ Generate consolidated balance sheets showing the amounts spent and owed by users
 | ---------------------- | ------------------------------- |
 | **Java 17+**           | Backend development             |
 | **Spring Boot 3.3.2**  | RESTful application framework   |
+| **Spring Security + JWT** | Stateless authentication     |
+| **springdoc-openapi**  | Swagger / OpenAPI documentation |
 | **Spring Data JPA**    | Data persistence                |
 | **Hibernate**          | ORM                             |
 | **MySQL 8.0+**         | Relational database             |
@@ -254,6 +256,59 @@ http://localhost:8080
 ```
 
 The APIs can be tested using Postman, cURL, or any compatible REST client.
+
+### Interactive API Docs (Swagger UI)
+
+Once running, explore and try every endpoint from the browser:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+The raw OpenAPI spec is available at `http://localhost:8080/v3/api-docs`.
+
+---
+
+# 🔐 Authentication
+
+All `/users` and `/expenses` endpoints are protected and require a **Bearer JWT**.
+Only `/auth/**` and the Swagger endpoints are public.
+
+## 🔑 Auth Endpoints
+
+| Method | Endpoint         | Description                              |
+| ------ | ---------------- | ---------------------------------------- |
+| `POST` | `/auth/register` | Create an account and receive a JWT      |
+| `POST` | `/auth/login`    | Authenticate and receive a JWT           |
+
+### Register
+
+```http
+POST /auth/register
+```
+
+```json
+{ "username": "alice", "password": "secret123" }
+```
+
+Response:
+
+```json
+{ "token": "<JWT>", "tokenType": "Bearer", "username": "alice" }
+```
+
+### Using the token
+
+Send the token in the `Authorization` header on every protected request:
+
+```http
+Authorization: Bearer <JWT>
+```
+
+In Swagger UI, click **Authorize** and paste the token to try protected endpoints.
+
+> Passwords are hashed with BCrypt. The JWT secret and expiry are read from the
+> `SECURITY_JWT_SECRET` and `SECURITY_JWT_EXPIRATION_MS` environment variables.
 
 ---
 
